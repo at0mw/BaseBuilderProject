@@ -12,62 +12,76 @@
 
 using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace CodeMonkey.Utils {
-
     /*
      * Sprite in the World
      * */
     public class World_Sprite {
-        
         private const int sortingOrderDefault = 5000;
 
         public GameObject gameObject;
+        private readonly SpriteRenderer spriteRenderer;
         public Transform transform;
-        private SpriteRenderer spriteRenderer;
 
 
-        public static World_Sprite CreateDebugButton(Vector3 position, System.Action ClickFunc) {
-            World_Sprite worldSprite = new World_Sprite(null, position, new Vector3(10, 10), Assets.i.s_White, Color.green, sortingOrderDefault);
+        public World_Sprite(Transform parent, Vector3 localPosition, Vector3 localScale, Sprite sprite, Color color,
+            int sortingOrderOffset) {
+            var position = localPosition;
+            if (parent != null) position = parent.TransformPoint(position);
+            var sortingOrder = GetSortingOrder(position, sortingOrderOffset);
+            gameObject = UtilsClass.CreateWorldSprite(parent, "Sprite", sprite, localPosition, localScale, sortingOrder,
+                color);
+            transform = gameObject.transform;
+            spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        }
+
+
+        public static World_Sprite CreateDebugButton(Vector3 position, Action ClickFunc) {
+            var worldSprite = new World_Sprite(null, position, new Vector3(10, 10), Assets.i.s_White, Color.green,
+                sortingOrderDefault);
             worldSprite.AddButton(ClickFunc, null, null);
             return worldSprite;
         }
 
-        public static World_Sprite CreateDebugButton(Transform parent, Vector3 localPosition, System.Action ClickFunc) {
-            World_Sprite worldSprite = new World_Sprite(parent, localPosition, new Vector3(10, 10), Assets.i.s_White, Color.green, sortingOrderDefault);
+        public static World_Sprite CreateDebugButton(Transform parent, Vector3 localPosition, Action ClickFunc) {
+            var worldSprite = new World_Sprite(parent, localPosition, new Vector3(10, 10), Assets.i.s_White,
+                Color.green, sortingOrderDefault);
             worldSprite.AddButton(ClickFunc, null, null);
             return worldSprite;
         }
 
-        public static World_Sprite CreateDebugButton(Transform parent, Vector3 localPosition, string text, System.Action ClickFunc, int fontSize = 30, float paddingX = 5, float paddingY = 5) {
-            GameObject gameObject = new GameObject("DebugButton");
+        public static World_Sprite CreateDebugButton(Transform parent, Vector3 localPosition, string text,
+            Action ClickFunc, int fontSize = 30, float paddingX = 5, float paddingY = 5) {
+            var gameObject = new GameObject("DebugButton");
             gameObject.transform.parent = parent;
             gameObject.transform.localPosition = localPosition;
-            TextMesh textMesh = UtilsClass.CreateWorldText(text, gameObject.transform, Vector3.zero, fontSize, Color.white, TextAnchor.MiddleCenter, TextAlignment.Center, 20000);
-            Bounds rendererBounds = textMesh.GetComponent<MeshRenderer>().bounds;
+            var textMesh = UtilsClass.CreateWorldText(text, gameObject.transform, Vector3.zero, fontSize, Color.white,
+                TextAnchor.MiddleCenter, TextAlignment.Center, 20000);
+            var rendererBounds = textMesh.GetComponent<MeshRenderer>().bounds;
 
-            Color color = UtilsClass.GetColorFromString("00BA00FF");
+            var color = UtilsClass.GetColorFromString("00BA00FF");
             if (color.r >= 1f) color.r = .9f;
             if (color.g >= 1f) color.g = .9f;
             if (color.b >= 1f) color.b = .9f;
-            Color colorOver = color * 1.1f; // button over color lighter
+            var colorOver = color * 1.1f; // button over color lighter
 
-            World_Sprite worldSprite = new World_Sprite(gameObject.transform, Vector3.zero, rendererBounds.size + new Vector3(paddingX, paddingY), Assets.i.s_White, color, sortingOrderDefault);
+            var worldSprite = new World_Sprite(gameObject.transform, Vector3.zero,
+                rendererBounds.size + new Vector3(paddingX, paddingY), Assets.i.s_White, color, sortingOrderDefault);
             worldSprite.AddButton(ClickFunc, () => worldSprite.SetColor(colorOver), () => worldSprite.SetColor(color));
             return worldSprite;
         }
 
-        public static World_Sprite Create(Transform parent, Vector3 localPosition, Vector3 localScale, Sprite sprite, Color color, int sortingOrderOffset) {
+        public static World_Sprite Create(Transform parent, Vector3 localPosition, Vector3 localScale, Sprite sprite,
+            Color color, int sortingOrderOffset) {
             return new World_Sprite(parent, localPosition, localScale, sprite, color, sortingOrderOffset);
         }
 
-        public static World_Sprite Create(Transform parent, Vector3 localPosition, Vector3 localScale, Sprite sprite = null, Color? color = null, int sortingOrderOffset = 0) {
-            if (sprite == null) {
-                sprite = Assets.i.s_White;
-            }
-            if (color == null) {
-                color = Color.white;
-            }
+        public static World_Sprite Create(Transform parent, Vector3 localPosition, Vector3 localScale,
+            Sprite sprite = null, Color? color = null, int sortingOrderOffset = 0) {
+            if (sprite == null) sprite = Assets.i.s_White;
+            if (color == null) color = Color.white;
             return new World_Sprite(parent, localPosition, localScale, sprite, (Color)color, sortingOrderOffset);
         }
 
@@ -75,7 +89,8 @@ namespace CodeMonkey.Utils {
             return new World_Sprite(null, worldPosition, new Vector3(1, 1, 1), sprite, Color.white, 0);
         }
 
-        public static World_Sprite Create(Vector3 worldPosition, Vector3 localScale, Sprite sprite, Color color, int sortingOrderOffset) {
+        public static World_Sprite Create(Vector3 worldPosition, Vector3 localScale, Sprite sprite, Color color,
+            int sortingOrderOffset) {
             return new World_Sprite(null, worldPosition, localScale, sprite, color, sortingOrderOffset);
         }
 
@@ -87,7 +102,8 @@ namespace CodeMonkey.Utils {
             return new World_Sprite(null, worldPosition, localScale, Assets.i.s_White, color, 0);
         }
 
-        public static World_Sprite Create(Vector3 worldPosition, Vector3 localScale, Color color, int sortingOrderOffset) {
+        public static World_Sprite Create(Vector3 worldPosition, Vector3 localScale, Color color,
+            int sortingOrderOffset) {
             return new World_Sprite(null, worldPosition, localScale, Assets.i.s_White, color, sortingOrderOffset);
         }
 
@@ -101,20 +117,6 @@ namespace CodeMonkey.Utils {
 
         public static int GetSortingOrder(Vector3 position, int offset, int baseSortingOrder = sortingOrderDefault) {
             return (int)(baseSortingOrder - position.y) + offset;
-        }
-
-
-
-
-        public World_Sprite(Transform parent, Vector3 localPosition, Vector3 localScale, Sprite sprite, Color color, int sortingOrderOffset) {
-            Vector3 position = localPosition;
-            if (parent != null) {
-                position = parent.TransformPoint(position);
-            }
-            int sortingOrder = GetSortingOrder(position, sortingOrderOffset);
-            gameObject = UtilsClass.CreateWorldSprite(parent, "Sprite", sprite, localPosition, localScale, sortingOrder, color);
-            transform = gameObject.transform;
-            spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         }
 
         public void SetActive(bool isActive) {
@@ -162,9 +164,7 @@ namespace CodeMonkey.Utils {
         }
 
         public void SetPosition(Func<Vector3> getLocalPosition) {
-            FunctionUpdater.Create(() => { 
-                transform.localPosition = getLocalPosition();
-            });
+            FunctionUpdater.Create(() => { transform.localPosition = getLocalPosition(); });
         }
 
         public Vector3 GetPosition() {
@@ -204,9 +204,9 @@ namespace CodeMonkey.Utils {
             gameObject.SetActive(false);
         }
 
-        public Button_Sprite AddButton(System.Action ClickFunc, System.Action MouseOverOnceFunc, System.Action MouseOutOnceFunc) {
+        public Button_Sprite AddButton(Action ClickFunc, Action MouseOverOnceFunc, Action MouseOutOnceFunc) {
             gameObject.AddComponent<BoxCollider2D>();
-            Button_Sprite buttonSprite = gameObject.AddComponent<Button_Sprite>();
+            var buttonSprite = gameObject.AddComponent<Button_Sprite>();
             if (ClickFunc != null)
                 buttonSprite.ClickFunc = ClickFunc;
             if (MouseOverOnceFunc != null)
@@ -217,9 +217,7 @@ namespace CodeMonkey.Utils {
         }
 
         public void DestroySelf() {
-            UnityEngine.Object.Destroy(gameObject);
+            Object.Destroy(gameObject);
         }
-
     }
-
 }

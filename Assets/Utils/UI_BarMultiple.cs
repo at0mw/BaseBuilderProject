@@ -10,43 +10,37 @@
     --------------------------------------------------
  */
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace CodeMonkey.Utils {
-    
     /*
      * UI Container with multiple bars, useful for displaying one bar with multiple inner bars like success chance and failure chance
      * */
     public class UI_BarMultiple {
-        
+        private readonly RectTransform[] barArr;
+        private Image[] barImageArr;
+
         private GameObject gameObject;
         private RectTransform rectTransform;
-        private RectTransform[] barArr;
-        private Image[] barImageArr;
-        private Vector2 size;
-        
-        public class Outline {
-            public float size = 1f;
-            public Color color = Color.black;
-            public Outline(float size, Color color) {
-                this.size = size;
-                this.color = color;
-            }
-        }
+        private readonly Vector2 size;
 
-        public UI_BarMultiple(Transform parent, Vector2 anchoredPosition, Vector2 size, Color[] barColorArr, Outline outline) {
+        public UI_BarMultiple(Transform parent, Vector2 anchoredPosition, Vector2 size, Color[] barColorArr,
+            Outline outline) {
             this.size = size;
             SetupParent(parent, anchoredPosition, size);
             if (outline != null) SetupOutline(outline, size);
-            List<RectTransform> barList = new List<RectTransform>();
-            List<Image> barImageList = new List<Image>();
-            List<float> defaultSizeList = new List<float>();
-            foreach (Color color in barColorArr) {
+            var barList = new List<RectTransform>();
+            var barImageList = new List<Image>();
+            var defaultSizeList = new List<float>();
+            foreach (var color in barColorArr) {
                 barList.Add(SetupBar(color));
                 defaultSizeList.Add(1f / barColorArr.Length);
             }
+
             barArr = barList.ToArray();
             barImageArr = barImageList.ToArray();
             SetSizes(defaultSizeList.ToArray());
@@ -64,24 +58,23 @@ namespace CodeMonkey.Utils {
         }
 
         private void SetupOutline(Outline outline, Vector2 size) {
-            UtilsClass.DrawSprite(outline.color, gameObject.transform, Vector2.zero, size + new Vector2(outline.size, outline.size), "Outline");
+            UtilsClass.DrawSprite(outline.color, gameObject.transform, Vector2.zero,
+                size + new Vector2(outline.size, outline.size), "Outline");
         }
 
         private RectTransform SetupBar(Color barColor) {
-            RectTransform bar = UtilsClass.DrawSprite(barColor, gameObject.transform, Vector2.zero, Vector2.zero, "Bar");
-            bar.anchorMin = new Vector2(0,0);
-            bar.anchorMax = new Vector2(0,1f);
-            bar.pivot = new Vector2(0,.5f);
+            var bar = UtilsClass.DrawSprite(barColor, gameObject.transform, Vector2.zero, Vector2.zero, "Bar");
+            bar.anchorMin = new Vector2(0, 0);
+            bar.anchorMax = new Vector2(0, 1f);
+            bar.pivot = new Vector2(0, .5f);
             return bar;
         }
 
         public void SetSizes(float[] sizeArr) {
-            if (sizeArr.Length != barArr.Length) {
-                throw new System.Exception("Length doesn't match!");
-            }
-            Vector2 pos = Vector2.zero;
-            for (int i=0; i<sizeArr.Length; i++) {
-                float scaledSize = sizeArr[i] * size.x;
+            if (sizeArr.Length != barArr.Length) throw new Exception("Length doesn't match!");
+            var pos = Vector2.zero;
+            for (var i = 0; i < sizeArr.Length; i++) {
+                var scaledSize = sizeArr[i] * size.x;
                 barArr[i].anchoredPosition = pos;
                 barArr[i].sizeDelta = new Vector2(scaledSize, 0f);
                 pos.x += scaledSize;
@@ -97,8 +90,17 @@ namespace CodeMonkey.Utils {
         }
 
         public void DestroySelf() {
-            UnityEngine.Object.Destroy(gameObject);
+            Object.Destroy(gameObject);
         }
 
+        public class Outline {
+            public Color color = Color.black;
+            public float size = 1f;
+
+            public Outline(float size, Color color) {
+                this.size = size;
+                this.color = color;
+            }
+        }
     }
 }
